@@ -1,0 +1,16 @@
+{
+  "name": "docxtemplater-testing",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "docxtemplater": "^3.68.4",
+    "pizzip": "^3.2.0"
+  }
+}
