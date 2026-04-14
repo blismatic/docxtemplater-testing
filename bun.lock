@@ -5,6 +5,7 @@
     "": {
       "name": "docxtemplater-testing",
       "dependencies": {
+        "angular-expressions": "^1.5.1",
         "docxtemplater": "^3.68.4",
         "pizzip": "^3.2.0",
       },
@@ -22,6 +23,8 @@
     "@types/node": ["@types/node@25.6.0", "", { "dependencies": { "undici-types": "~7.19.0" } }, "sha512-+qIYRKdNYJwY3vRCZMdJbPLJAtGjQBudzZzdzwQYkEPQd+PJGixUL5QfvCLDaULoLv+RhT3LDkwEfKaAkgSmNQ=="],
 
     "@xmldom/xmldom": ["@xmldom/xmldom@0.9.9", "", {}, "sha512-qycIHAucxy/LXAYIjmLmtQ8q9GPnMbnjG1KXhWm9o5sCr6pOYDATkMPiTNa6/v8eELyqOQ2FsEqeoFYmgv/gJg=="],
+
+    "angular-expressions": ["angular-expressions@1.5.1", "", {}, "sha512-Ukcyuye0eb15zuvMFR7Kziuf7gV0gYAZXMevNI40rXF8f9k+/yk8+r5edFWRFOwnqSvAEFoP2bKNXaXgYa+Ayw=="],
 
     "bun-types": ["bun-types@1.3.12", "", { "dependencies": { "@types/node": "*" } }, "sha512-HqOLj5PoFajAQciOMRiIZGNoKxDJSr6qigAttOX40vJuSp6DN/CxWp9s3C1Xwm4oH7ybueITwiaOcWXoYVoRkA=="],
 
