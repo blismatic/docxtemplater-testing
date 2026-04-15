@@ -26,38 +26,73 @@ const zip = new PizZip(content);
  * for example, if the template is "Hello {user" (missing closing tag)
  */
 
+/*
+ * Punctuation styling helpers
+ */
+type PunctuationOption = {
+  style?: string | null;
+  sep?: string | null;
+  conj?: string | null;
+  isOxford?: boolean;
+};
+
+const PUNC_STYLES: Record<string, PunctuationOption> = {
+  "semicolon and": { sep: ";", conj: "and", isOxford: true },
+  "comma and": { sep: ",", conj: "and", isOxford: true },
+};
+
 const doc = new Docxtemplater(zip, {
   paragraphLoop: true,
   linebreaks: true,
+  delimiters: { start: "[[", end: "]]" },
   parser: expressionParser.configure({
     evaluateIdentifier(tag, scope, scopeList, context) {
       if (tag === "$punc") {
         // Capture context in the closure so the returned function can use it
         const totalLength = context.scopePathLength.at(-1);
         const index = context.scopePathItem.at(-1);
-        const isLast = index === totalLength - 1;
-        const isPenultimate = index === totalLength - 2;
 
-        return (
-          style: string,
-          sep: string,
-          conj: string,
-          isOxford: boolean,
-        ) => {
-          console.log(`style = ${style}, type = ${typeof style}`);
-          console.log(`sep = ${sep}, type = ${typeof sep}`);
-          console.log(`conj = ${conj}, type = ${typeof conj}`);
-          console.log(`isOxford = ${isOxford}, type = ${typeof isOxford}`);
-          if (isLast) {
-            return "";
-          } else if (isPenultimate) {
-            // Two-item list: just the final separator, no Oxford comma ever. That's the rules of english.
-            if (totalLength === 2) return finalSep.replace(/^[,;]\s*/, " ");
-            // Longer list: apply Oxford comma preference as provided by parameter
-            return isOxford ? finalSep : finalSep.replace(/^[,;]\s*/, " ");
-          } else {
-            return sep;
+        return (opts: PunctuationOption = {}) => {
+          // If `style` paramater is given, look it up using PUNC_STYLES and
+          // ignore any other parmaters that may have been provided.
+          if (opts.style) {
+            const preset = PUNC_STYLES[opts.style];
+            if (!preset) {
+              throw new SyntaxError(
+                `Unknown $punc style provided: "${opts.style}". Valid styles are: ${Object.keys(PUNC_STYLES).join(", ")}.`,
+              );
+            }
+            opts = PUNC_STYLES[opts.style];
           }
+
+          //   const sep = resolved.sep ?? null;
+          //   const conj = resolved.conj ?? null;
+          //   const isOxford = resolved.isOxford ?? true; // Defaults to true, as that is most common
+          opts.isOxford = opts.isOxford ?? true; // Defaults to true if not provided, as that is the most common use case.
+          console.log(opts, typeof opts);
+          //   console.log(resolved, typeof resolved);
+          console.log("---------------");
+
+          const isLast = index === totalLength - 1;
+          const isSecondToLast = index === totalLength - 2;
+          const isPair = totalLength === 2;
+
+          if (isLast) return "";
+
+          // Two-item list: if we have a conjunction, it replaces the separator entirely
+          if (isPair) {
+            return opts.conj ? ` ${opts.conj} ` : `${opts.sep} `;
+          }
+
+          // Three-or-more list, slit right before the last item
+          if (isSecondToLast) {
+            if (!opts.conj) return `${opts.sep} `;
+            if (opts.isOxford) return `${opts.sep} ${opts.conj} `;
+            return ` ${opts.conj} `;
+          }
+
+          // Any earlier slot: just the separator
+          return `${opts.sep} `;
         };
       }
     },
