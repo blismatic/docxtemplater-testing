@@ -13,7 +13,7 @@ import input from "../inputs/people.json";
 
 // Load the docx file as binary content
 const content = fs.readFileSync(
-  path.resolve(__dirname, "../templates/list-punctuation-version-d.docx"),
+  path.resolve(__dirname, "../templates/list-punctuation-version-e.docx"),
   "binary",
 );
 
@@ -37,14 +37,13 @@ type PunctuationOption = {
 };
 
 const PUNC_STYLES: Record<string, PunctuationOption> = {
-  "semicolon and": { sep: ";", conj: "and", isOxford: true },
-  "comma and": { sep: ",", conj: "and", isOxford: true },
+  SEMICOLON_AND: { sep: ";", conj: "and", isOxford: true },
+  COMMA_AND: { sep: ",", conj: "and", isOxford: true },
 };
 
 const doc = new Docxtemplater(zip, {
   paragraphLoop: true,
   linebreaks: true,
-  delimiters: { start: "[[", end: "]]" },
   parser: expressionParser.configure({
     evaluateIdentifier(tag, scope, scopeList, context) {
       if (tag === "$punc") {
@@ -52,53 +51,50 @@ const doc = new Docxtemplater(zip, {
         const totalLength = context.scopePathLength.at(-1);
         const index = context.scopePathItem.at(-1);
 
-        return (opts: PunctuationOption = {}) => {
-          // If `style` paramater is given, look it up using PUNC_STYLES and
-          // ignore any other parameters that may have been provided.
-          if (opts.style) {
-            const preset = PUNC_STYLES[opts.style];
-            if (!preset) {
-              throw new SyntaxError(
-                `Unknown $punc style provided: "${opts.style}". Valid styles are: ${Object.keys(PUNC_STYLES).join(", ")}.`,
-              );
-            }
-            opts = PUNC_STYLES[opts.style];
-          }
-
-          opts.isOxford = opts.isOxford ?? true; // Defaults to true if not provided, as that is the most common use case.
-
+        return (
+          style: string,
+          sep: string,
+          conj: string,
+          isOxford: boolean = true,
+        ) => {
           const isLast = index === totalLength - 1;
+          if (isLast) return "";
+
           const isSecondToLast = index === totalLength - 2;
           const isPair = totalLength === 2;
 
-          if (isLast) return "";
+          // If `style` paramater is given, look it up using PUNC_STYLES and
+          // ignore any other parameters that may have been provided.
+          if (style) {
+            const preset = PUNC_STYLES[style];
+            if (!preset) {
+              throw new SyntaxError(
+                `Unknown $punc style provided: "${style}". Valid styles are: ${Object.keys(PUNC_STYLES).join(", ")}.`,
+              );
+            }
+            ({ sep, conj, isOxford } = preset);
+          }
 
           // Two-item list: if we have a conjunction, it replaces the separator entirely
           if (isPair) {
-            return opts.conj ? ` ${opts.conj} ` : `${opts.sep} `;
+            return conj ? ` ${conj} ` : `${sep} `;
           }
 
           // Three-or-more list, slot right before the last item
           if (isSecondToLast) {
-            if (!opts.conj) return `${opts.sep} `;
-            if (opts.isOxford) return `${opts.sep} ${opts.conj} `;
-            return ` ${opts.conj} `;
+            if (!conj) return `${sep} `;
+            if (isOxford) return `${sep} ${conj} `;
+            return ` ${conj} `;
           }
 
           // Any earlier slot: just the separator
-          return `${opts.sep} `;
+          return `${sep} `;
         };
       }
     },
   }),
 });
 
-/*
- * Render the document : Replaces :
- * - {first_name} with John
- * - {last_name} with Doe,
- * ...
- */
 doc.render(input);
 
 /*
@@ -109,6 +105,6 @@ const buf = doc.toBuffer();
 
 // Write the Buffer to a file
 fs.writeFileSync(
-  path.resolve(__dirname, "../outputs/output-punctuation-d.docx"),
+  path.resolve(__dirname, "../outputs/output-punctuation-e.docx"),
   buf,
 );
